@@ -10,9 +10,15 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/MagicTheGathering/mtg-sdk-go"
+	"github.com/briandowns/spinner"
 )
+
+var Red = "\033[31m"
+var Reset = "\033[0m"
 
 func Check(e error) {
 	if e != nil {
@@ -47,6 +53,20 @@ func GetCard(cardName string) (mtg.Card, error) {
 	return errorCard, errors.New("{{Carta não encontrada}}: ")
 }
 
+func GetCards(cardsInput []string, cards *[]mtg.Card, wg *sync.WaitGroup) {
+	for i := 0; i < len(cardsInput); i++ {
+		card, err := GetCard(cardsInput[i])
+		if err != nil {
+			fmt.Println()
+			fmt.Println(Red + err.Error() + ": " + cardsInput[i] + Reset)
+			fmt.Println()
+			continue
+		}
+		*cards = append(*cards, card)
+	}
+	wg.Done()
+}
+
 func GetChosenFormat() string {
 	mtgFormats, err := mtg.GetFormats()
 	Check(err)
@@ -69,9 +89,11 @@ func GetChosenFormat() string {
 }
 
 func main() {
+	s := spinner.New(spinner.CharSets[26], 1000*time.Millisecond)
+
 	chosenFormat := GetChosenFormat()
-	fmt.Println("Checando legalidade das cartas para " + chosenFormat + "...")
-	fmt.Println()
+	s.Prefix = "Checando legalidade das cartas para " + chosenFormat
+	s.Start()
 
 	dat, err := os.ReadFile("cards.csv")
 	Check(err)
@@ -80,16 +102,11 @@ func main() {
 
 	cards := make([]mtg.Card, 0)
 
-	for i := 0; i < len(cardsInput); i++ {
-		card, err := GetCard(cardsInput[i])
-		if err != nil {
-			fmt.Println()
-			fmt.Println(err.Error() + ": " + cardsInput[i])
-			fmt.Println()
-			continue
-		}
-		cards = append(cards, card)
-	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go GetCards(cardsInput, &cards, &wg)
+	wg.Wait()
+	s.Stop()
 
 	validCards := make([]string, 0)
 	invalidCards := make([]string, 0)
