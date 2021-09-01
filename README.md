@@ -24,7 +24,7 @@ Muitas vezes, jogadores de MTG que já jogam algum formato há algum tempo, tend
 
 _Is This Deck Legal_ é uma ferramenta que ajuda os jogadores a identificar quais cartas de um deck são legais em um determinado formato. Ele funciona da seguinte maneira: O programa lê um arquivo de texto com a lista de cartas separadas por linha, você escolhe o formato para checar a legalidade das cartas e, então, o programa consulta a [API de Magic: The Gathering](https://docs.magicthegathering.io/) e te retorna uma lista de quais cartas são válidas e quais cartas não são válidas no formato escolhido.
 
-## Sobre o repositório e como rodar a aplicação
+## Sobre o repositório e como executar a aplicação
 
 A aplicação requer um único argumento na linha de comando: o nome do arquivo que possui a lista de cartas a serem checadas.
 
