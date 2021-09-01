@@ -18,6 +18,8 @@ import (
 )
 
 var Red = "\033[31m"
+var Green = "\033[32m"
+var Yellow = "\033[33m"
 var Reset = "\033[0m"
 
 func Check(e error) {
@@ -34,7 +36,7 @@ func GetCard(cardName string) (mtg.Card, error) {
 	body, err := ioutil.ReadAll(resp.Body)
 	Check(err)
 
-	defer resp.Body.Close() // for garbage collection
+	defer resp.Body.Close()
 
 	bodyString := string(body)
 
@@ -58,7 +60,7 @@ func GetCards(cardsInput []string, cards *[]mtg.Card, wg *sync.WaitGroup) {
 		card, err := GetCard(cardsInput[i])
 		if err != nil {
 			fmt.Println()
-			fmt.Println(Red + err.Error() + ": " + cardsInput[i] + Reset)
+			fmt.Println(Yellow + err.Error() + ": " + cardsInput[i] + Reset)
 			fmt.Println()
 			continue
 		}
@@ -71,7 +73,7 @@ func GetChosenFormat() string {
 	mtgFormats, err := mtg.GetFormats()
 	Check(err)
 
-	fmt.Println("Qual formato você quer jogar?")
+	fmt.Println("Qual formato você quer jogar com esse deck?")
 	for i := 0; i < len(mtgFormats); i++ {
 		fmt.Println(strconv.Itoa(i) + " - " + mtgFormats[i])
 	}
@@ -79,7 +81,6 @@ func GetChosenFormat() string {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("-> ")
 	text, _ := reader.ReadString('\n')
-	// convert CRLF to LF
 	text = strings.Replace(text, "\n", "", -1)
 
 	chosenFormat, err := strconv.Atoi(text)
@@ -92,10 +93,11 @@ func main() {
 	s := spinner.New(spinner.CharSets[26], 1000*time.Millisecond)
 
 	chosenFormat := GetChosenFormat()
-	s.Prefix = "Checando legalidade das cartas para " + chosenFormat
+	s.Prefix = "Checando legalidade das cartas do seu deck para jogar " + chosenFormat
 	s.Start()
 
-	dat, err := os.ReadFile("cards.csv")
+	deckListFile := os.Args[1]
+	dat, err := os.ReadFile(deckListFile)
 	Check(err)
 
 	cardsInput := strings.Split(string(dat), "\n")
@@ -107,6 +109,8 @@ func main() {
 	go GetCards(cardsInput, &cards, &wg)
 	wg.Wait()
 	s.Stop()
+
+	fmt.Println()
 
 	validCards := make([]string, 0)
 	invalidCards := make([]string, 0)
@@ -129,20 +133,22 @@ func main() {
 	fmt.Println()
 
 	if len(validCards) > 0 && len(invalidCards) == 0 {
-		fmt.Println("Seu deck é TOTALMENTE jogável no " + chosenFormat + "!!! :D")
+		fmt.Println(Green + "Seu deck é TOTALMENTE jogável no " + chosenFormat + "!!! :D" + Reset)
 	} else if len(invalidCards) > 0 && len(validCards) == 0 {
-		fmt.Println("NENHUMA carta do seu deck é jogável no " + chosenFormat + " :(")
+		fmt.Println(Red + "NENHUMA carta do seu deck é jogável no " + chosenFormat + " :(" + Reset)
 	} else {
-		fmt.Println("[[Cartas LEGAIS no " + chosenFormat + "]]:")
+		fmt.Println(Green + "[[Cartas LEGAIS no " + chosenFormat + "]]:" + Reset)
 		for i := 0; i < len(validCards); i++ {
 			fmt.Println(validCards[i])
 		}
 		fmt.Println()
 		fmt.Println("------------------------------------------")
 		fmt.Println()
-		fmt.Println("[[Cartas ILEGAIS no " + chosenFormat + "]]:")
+		fmt.Println(Red + "[[Cartas ILEGAIS no " + chosenFormat + "]]:" + Reset)
 		for i := 0; i < len(invalidCards); i++ {
 			fmt.Println(invalidCards[i])
 		}
 	}
+
+	fmt.Println()
 }
