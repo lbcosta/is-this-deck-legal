@@ -42,4 +42,4 @@ Depois é só executar passando o nome do arquivo (que deve estar na mesma pasta
 
 Um exemplo de input para o programa está dentro do repositório. O arquivo **deck.csv**. Um exemplo de output para esse arquivo seria:
 
-![example-output](https://github.com/lbcosta/is-this-deck-legal/raw/master/output-example.png)
+![example-output](https://github.com/lbcosta/is-this-deck-legal/raw/main/output-example.png)
